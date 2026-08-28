@@ -1,4 +1,4 @@
-# Part 13 — Run: AI Inference
+# Xenia — Run
 
 Two halves: the **provider** (`cli-provider/`, a headless logoscore node running
 ollama) and the **user** (`inference-core` + `inference-ui` in Basecamp). They meet
@@ -15,7 +15,7 @@ Needs **ollama** with the model pulled, plus `logoscore`, `jq`, `curl`.
 ollama serve &
 ollama pull tinyllama
 
-cd part13-ai-inference/cli-provider
+cd xenia/cli-provider
 ./setup-modules.sh                 # one-time: nix-builds the dev delivery_module + inference_provider
 ./inference-provider.sh agora      # answer prompts on /inference/1/agora/json
 ```
@@ -68,12 +68,12 @@ Users see both in the roster and can pick between them (or let it auto-balance).
 On a machine with the Logos nix toolchain:
 
 ```bash
-cd part13-ai-inference/inference-core && nix build '.#lgx-portable'
+cd xenia/inference-core && nix build '.#lgx-portable'
 cd ../inference-ui                     && nix build '.#lgx-portable'
 ```
 
 Install both resulting `.lgx` into Basecamp (Package Manager → install from file,
-or the workshop reinstall drill). You'll get an **AI Inference** app.
+or the workshop reinstall drill). You'll get a **Xenia** app.
 
 > Dependency wiring: `inference` declares `delivery_module`; `inference_ui`
 > declares `inference`. The loader pulls `delivery_module` in automatically.
@@ -85,7 +85,7 @@ Waku port `60000`, the provider uses `60010` (set via `INFERENCE_TCPPORT`).
 
 ## C. Drive it
 
-1. Open **AI Inference** in Basecamp.
+1. Open **Xenia** in Basecamp.
 2. **First run:** the amber card asks you to **Create new account** (shows the
    seed phrase once — write it down) or **Import** an existing one. A locked key
    file shows an **Unlock** card instead.

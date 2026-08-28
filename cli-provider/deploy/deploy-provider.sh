@@ -105,7 +105,7 @@ cd "$HOME/cli-provider"
 echo "[remote] installing systemd service…"
 sudo tee /etc/systemd/system/inference-provider.service >/dev/null <<UNIT
 [Unit]
-Description=Logos part13 AI inference provider (logoscore + ollama)
+Description=Xenia inference provider (logoscore + ollama)
 After=network-online.target ollama.service
 Wants=network-online.target ollama.service
 
@@ -150,4 +150,4 @@ REMOTE
 
 ok "deployed. provider is answering room '$ROOM' with '$INFERENCE_MODEL'."
 ok "watch it:   ssh ubuntu@$IP journalctl -fu inference-provider"
-ok "test from Basecamp: AI Inference → join room '$ROOM' → Start → send a prompt"
+ok "test from Basecamp: Xenia → join room '$ROOM' → Start → send a prompt"

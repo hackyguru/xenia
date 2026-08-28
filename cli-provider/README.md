@@ -1,6 +1,6 @@
-# cli-provider — a headless AI inference provider built from `logoscore`
+# cli-provider — a headless Xenia provider built from `logoscore`
 
-This is the **provider** half of part13. It turns
+This is the **provider** half of Xenia. It turns
 [`logos-logoscore-cli`](https://github.com/logos-co/logos-logoscore-cli) into an
 inference node: it subscribes to a Logos delivery content topic, and for every
 `prompt` it runs a local LLM via **ollama** (`tinyllama`) and publishes the
@@ -41,7 +41,7 @@ cd cli-provider
 ./inference-provider.sh agora      # listen + answer on /inference/1/agora/json
 ```
 
-Leave it running. In Basecamp, open **AI Inference**, join room `agora`, Start,
+Leave it running. In Basecamp, open **Xenia**, join room `agora`, Start,
 type a prompt, Send. Each prompt prints here as `prompts: N · responses: N`, and
 the Basecamp UI shows the model's reply.
 

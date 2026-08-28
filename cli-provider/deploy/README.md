@@ -1,6 +1,6 @@
 # deploy/ — host cli-provider on an Oracle Cloud Always-Free A1 VM
 
-Runs the part13 inference provider 24/7 for $0: a `VM.Standard.A1.Flex`
+Runs the Xenia inference provider 24/7 for $0: a `VM.Standard.A1.Flex`
 (4 OCPU / 24 GB, aarch64 Ubuntu 24.04) running ollama + the logoscore daemon.
 
 ## One-time: Oracle auth (manual, ~5 min)
@@ -18,7 +18,7 @@ outlive a browser session token.
 ## Provision + deploy
 
 ```bash
-cd part13-ai-inference/cli-provider/deploy
+cd xenia/cli-provider/deploy
 ./provision-oracle-a1.sh     # network + A1 instance; retries "Out of host capacity" up to 4h
 ./deploy-provider.sh         # rsync, nix-build logoscore + modules on the VM, systemd service
 ```

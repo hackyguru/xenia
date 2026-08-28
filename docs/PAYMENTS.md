@@ -1,4 +1,4 @@
-# Part 13 — Payments: anonymous LEZ-paid inference
+# Xenia — Payments: anonymous LEZ-paid inference
 
 Turn the free inference marketplace into a **paid** one, where a user pays a
 provider for each session of inference over the **Logos Execution Zone (LEZ)** —
@@ -147,7 +147,7 @@ is all reads. So the remaining work is wiring, not a wall:
 ## Deployment note — the inference UI must load the wallet stack
 
 Paid inference settles through `persona_core` (which drives
-`logos_execution_zone`). Those must be **loaded** when the AI Inference app
+`logos_execution_zone`). Those must be **loaded** when the Xenia app
 opens, or the wallet bar's remote calls block on a replica that never appears
 ("Timeout waiting for replica: persona_core") and freeze the whole Basecamp
 shell. So `inference_ui`'s **manifest** must list them as dependencies:

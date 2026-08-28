@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # provision-oracle-a1.sh — create an Always-Free Oracle Cloud Ampere A1 VM
-# (4 OCPU / 24 GB, Ubuntu 24.04 aarch64) ready to host the part13 inference
+# (4 OCPU / 24 GB, Ubuntu 24.04 aarch64) ready to host the Xenia inference
 # provider. Idempotent-ish: reuses the VCN/subnet if they exist, and refuses
 # to launch a second instance if deploy/.instance.env points at a live one.
 #

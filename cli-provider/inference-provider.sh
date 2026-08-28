@@ -7,7 +7,7 @@
 # subscribes to the inference content topic, and for every "prompt" it runs a
 # local LLM via ollama (tinyllama) and sends back the "response" — entirely
 # in-process (it wires delivery_module's messageReceived directly, the way
-# Basecamp modules do). The user side runs in Basecamp (part13 inference-ui/core).
+# Basecamp modules do). The user side runs in Basecamp (Xenia inference-ui/core).
 #
 #   prompt  (Basecamp)  ── /inference/1/<room>/json ──▶  ollama  (this CLI module)
 #                       ◀──────────  response  ──────────
@@ -153,7 +153,7 @@ if [[ "$(jq -r '.initialized' <<<"$idjson" 2>/dev/null)" == "true" && "$backend"
     log "identity is mnemonic-backed — if this is a fresh account, the seed phrase was printed in $DAEMON_LOG (once)."
 fi
 echo   "──────────────────────────────────────────────────────────────"
-log "send prompts from Basecamp's \"AI Inference\" app (same room). Ctrl+C to stop."
+log "send prompts from Basecamp's \"Xenia\" app (same room). Ctrl+C to stop."
 
 # --- 4. show live prompt/response counts ------------------------------------
 last=-1
