@@ -53,7 +53,7 @@ InferencePlugin::InferencePlugin(QObject* parent)
     // Payment backend for incentivized (access=lez) providers: "mock" runs the
     // paid flow with a synthetic session id (dev/macOS); "lez" pays for real by
     // deshielding (private→public) a one-time amount to the provider's public
-    // account through logos_wallet — the user stays shielded.
+    // account through persona_core — the user stays shielded.
     m_payBackend = qEnvironmentVariable("INFERENCE_PAY_BACKEND", "mock").trimmed().toLower();
     m_seq = qEnvironmentVariable("LEZ_SEQUENCER", "https://testnet.lez.logos.co").trimmed();
     loadTrust();
@@ -230,6 +230,12 @@ bool InferencePlugin::startDelivery()
         cfgObj["logLevel"] = "INFO";
         cfgObj["mode"]     = "Core";
         cfgObj["preset"]   = "logos.dev";
+        // The logos.dev preset still pins clusterId 2, but the fleet moved to
+        // cluster 3 — peers drop us during the metadata handshake unless we
+        // override it explicitly (explicit fields merge over the preset).
+        int clusterId = qEnvironmentVariableIntValue("INFERENCE_CLUSTER_ID");
+        if (clusterId <= 0) clusterId = 3;
+        cfgObj["clusterId"] = clusterId;
         // Running a second delivery node on one machine? Override the port.
         const int customPort = qEnvironmentVariableIntValue("INFERENCE_TCPPORT");
         if (customPort > 0) {
@@ -507,7 +513,7 @@ double InferencePlugin::seqBalance(const QString& payToHex) const
 // Mock backend (dev/macOS): mark ready immediately with a synthetic amount so
 // the paid flow runs end to end without a funded wallet. Real backend
 // (INFERENCE_PAY_BACKEND=lez): on first use, deshield a unique one-time amount
-// (private→public) to the provider's public payTo through logos_wallet — the
+// (private→public) to the provider's public payTo through persona_core — the
 // payer stays shielded — and report not-ready until pollPayments() sees it land.
 bool InferencePlugin::ensureSession(const QString& providerFp, const ProviderRec& p,
                                     QString& amountOut)
@@ -544,10 +550,10 @@ bool InferencePlugin::ensureSession(const QString& providerFp, const ProviderRec
         return true;
     }
 
-    if (!m_walletClient) m_walletClient = logosAPI ? logosAPI->getClient("logos_wallet") : nullptr;
+    if (!m_walletClient) m_walletClient = logosAPI ? logosAPI->getClient("persona_core") : nullptr;
     if (!m_walletClient) {
-        m_payError = QStringLiteral("Open the Logos Wallet app to enable payments.");
-        qWarning() << "InferencePlugin: logos_wallet unavailable — can't pay" << providerFp;
+        m_payError = QStringLiteral("Open the Persona wallet app to enable payments.");
+        qWarning() << "InferencePlugin: persona_core unavailable — can't pay" << providerFp;
         return false;
     }
     // The LEZ wallet must be OPEN before we fire a payment — otherwise the
@@ -555,12 +561,12 @@ bool InferencePlugin::ensureSession(const QString& providerFp, const ProviderRec
     // Check first and fail fast with a clear, actionable reason.
     {
         const QVariant sv = m_walletClient->invokeRemoteMethod(
-            "logos_wallet", "lezStatus", QVariantList{});
+            "persona_core", "lezStatus", QVariantList{});
         const QJsonObject st = QJsonDocument::fromJson(sv.toString().toUtf8()).object();
         if (!st.value("ready").toBool()) {
             m_payError = st.value("hasWallet").toBool()
-                ? QStringLiteral("Open your LEZ wallet (Logos Wallet app) to pay this provider.")
-                : QStringLiteral("Set up your LEZ wallet (Logos Wallet app) to pay this provider.");
+                ? QStringLiteral("Open your LEZ wallet (Persona app) to pay this provider.")
+                : QStringLiteral("Set up your LEZ wallet (Persona app) to pay this provider.");
             qWarning() << "InferencePlugin: LEZ wallet not open — can't pay" << providerFp;
             return false;
         }
@@ -575,7 +581,7 @@ bool InferencePlugin::ensureSession(const QString& providerFp, const ProviderRec
     // Fire the one-time payment: deshield from our (auto-picked) private account
     // to the provider's public account. Async — settles in ~a minute; pollPayments
     // flips the session ready once the credit shows up.
-    m_walletClient->invokeRemoteMethod("logos_wallet", "lezTransfer",
+    m_walletClient->invokeRemoteMethod("persona_core", "lezTransfer",
         QVariantList{ QStringLiteral("deshielded"), QString(), p.payTo, QString::number(amount) });
     m_sessions.insert(providerFp, s);
     amountOut = QString::number(amount);
@@ -999,8 +1005,18 @@ void InferencePlugin::handleMessageReceived(const QVariantList& data)
         !m_sessionSubs.contains(topic))
         return;
 
-    const QByteArray payload =
-        QByteArray::fromBase64(data[2].toString().toUtf8());
+    // delivery_module ≥0.2.0 emits the payload as raw bytes (QByteArray, or a
+    // QVariantList of byte values over IPC); older builds sent base64 text.
+    // Our messages are always JSON objects, so sniff the leading brace.
+    QByteArray payload;
+    if (data[2].userType() == QMetaType::QVariantList) {
+        for (const QVariant& b : data[2].toList())
+            payload.append(char(b.toUInt()));
+    } else {
+        payload = data[2].toByteArray();
+    }
+    if (!payload.startsWith('{'))
+        payload = QByteArray::fromBase64(payload);
 
     QJsonParseError err{};
     const QJsonDocument doc = QJsonDocument::fromJson(payload, &err);

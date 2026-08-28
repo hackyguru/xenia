@@ -145,7 +145,7 @@ private:
                              int bits, QString& nonceOut);
     // Per-session prepay. Ensures a prepaid session to a paid provider: on first
     // use it fires a one-time deshield (private→public) of a unique amount to
-    // the provider's public payTo via logos_wallet, then reports readiness once
+    // the provider's public payTo via persona_core, then reports readiness once
     // pollPayments() sees the payment settle. amountOut is the session id.
     bool    ensureSession(const QString& providerFp, const ProviderRec& p,
                           QString& amountOut);
@@ -176,7 +176,7 @@ private:
     QString           m_payBackend;
     QString           m_seq;                    // LEZ sequencer URL (LEZ_SEQUENCER)
     QString           m_payError;               // last "can't pay" reason (wallet not open, etc.)
-    LogosAPIClient*   m_walletClient = nullptr; // logos_wallet (makes the payment)
+    LogosAPIClient*   m_walletClient = nullptr; // persona_core (makes the payment)
     QTimer*           m_payTimer     = nullptr; // polls payTo until sessions fund
     bool              m_autoAudit   = false;   // opt-in (INFERENCE_AUTO_AUDIT); informational only
     bool              m_requireEncryption = false;

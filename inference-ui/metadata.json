@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "type": "ui_qml",
   "category": "example",
-  "description": "AI Inference UI — send a prompt into a content topic and watch a remote logoscore-CLI provider (ollama) answer",
+  "description": "Xenia — ask any model on the Logos network. Sends a prompt into a content topic and watches a remote logoscore-CLI provider (ollama) answer",
   "view": "Main.qml",
   "icon": "icons/inference.png",
   "dependencies": ["inference"],

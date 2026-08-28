@@ -382,6 +382,12 @@ bool ProviderPlugin::start(const QString& room)
         cfgObj["logLevel"] = "INFO";
         cfgObj["mode"]     = "Core";
         cfgObj["preset"]   = "logos.dev";
+        // The logos.dev preset still pins clusterId 2, but the fleet moved to
+        // cluster 3 — peers drop us during the metadata handshake unless we
+        // override it explicitly (explicit fields merge over the preset).
+        int clusterId = qEnvironmentVariableIntValue("INFERENCE_CLUSTER_ID");
+        if (clusterId <= 0) clusterId = 3;
+        cfgObj["clusterId"] = clusterId;
         int customPort = qEnvironmentVariableIntValue("INFERENCE_TCPPORT");
         if (customPort <= 0) customPort = 60010;
         cfgObj["tcpPort"]       = customPort;
@@ -634,8 +640,18 @@ void ProviderPlugin::handleMessageReceived(const QVariantList& data)
     const bool onSession = (topic == sessionTopic());
     if (topic != topicForRoom(m_room) && !onSession) return;
 
-    const QByteArray payload =
-        QByteArray::fromBase64(data[2].toString().toUtf8());
+    // delivery_module ≥0.2.0 emits the payload as raw bytes (QByteArray, or a
+    // QVariantList of byte values over IPC); older builds sent base64 text.
+    // Our messages are always JSON objects, so sniff the leading brace.
+    QByteArray payload;
+    if (data[2].userType() == QMetaType::QVariantList) {
+        for (const QVariant& b : data[2].toList())
+            payload.append(char(b.toUInt()));
+    } else {
+        payload = data[2].toByteArray();
+    }
+    if (!payload.startsWith('{'))
+        payload = QByteArray::fromBase64(payload);
 
     QJsonParseError err{};
     const QJsonDocument doc = QJsonDocument::fromJson(payload, &err);

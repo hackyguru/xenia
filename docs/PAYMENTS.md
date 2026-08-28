@@ -15,7 +15,7 @@ across two machines on the hosted testnet (`testnet.lez.logos.co`).
    Alice — the user (Basecamp)                Bob — the provider (logoscore CLI)
    ─────────────────────────────             ──────────────────────────────────
    inference-ui + inference-core             inference_provider + ollama
-   logos_wallet (LEZ)  ← pays from           reads payTo balance over RPC
+   persona_core (LEZ)  ← pays from           reads payTo balance over RPC
    private, shielded balance                 (no wallet module needed)
 ```
 
@@ -31,7 +31,7 @@ across two machines on the hosted testnet (`testnet.lez.logos.co`).
   Alice picks a paid provider ─────────────────────────────────────────────┐
                                                                             │
   ensureSession(): first prompt to that provider →                         │
-     lezTransfer("deshielded", amount, payTo)  via logos_wallet            │  amount =
+     lezTransfer("deshielded", amount, payTo)  via persona_core            │  amount =
      (private → public; Alice shielded)                                     │  base + small
                           │                                                 │  random salt
                           ▼                                                 │  (= session id,
@@ -71,7 +71,7 @@ INFERENCE_MODELS=tinyllama           # keep it fast — big models blow the clie
 
 The provider only *reads* `payTo` over RPC, so it needs no wallet. But `payTo`
 must be a **registered public LEZ account** — create one once in a Basecamp
-`logos_wallet` ("+ Public" registers it on-chain) and paste its hex id here.
+`persona_core` ("+ Public" registers it on-chain) and paste its hex id here.
 
 **User** (Basecamp): run the inference app with `INFERENCE_PAY_BACKEND=lez`, open
 the **Logos Wallet** once (the wallet bar in the inference UI auto-opens it), and
@@ -146,23 +146,23 @@ is all reads. So the remaining work is wiring, not a wall:
 
 ## Deployment note — the inference UI must load the wallet stack
 
-Paid inference settles through `logos_wallet` (which drives
+Paid inference settles through `persona_core` (which drives
 `logos_execution_zone`). Those must be **loaded** when the AI Inference app
 opens, or the wallet bar's remote calls block on a replica that never appears
-("Timeout waiting for replica: logos_wallet") and freeze the whole Basecamp
+("Timeout waiting for replica: persona_core") and freeze the whole Basecamp
 shell. So `inference_ui`'s **manifest** must list them as dependencies:
 
 ```json
-"dependencies": ["logos_execution_zone", "logos_wallet", "inference"]
+"dependencies": ["logos_execution_zone", "persona_core", "inference"]
 ```
 
 The wallet-bar queries are also issued asynchronously as a second line of
 defence, but the dependency is what actually prevents the stall (and removes the
 separate "open the Logos Wallet app" trip — the stack loads with the app). This
-isn't baked into `inference_ui`'s source `metadata.json` because `logos_wallet`
+isn't baked into `inference_ui`'s source `metadata.json` because `persona_core` (formerly `logos_wallet`)
 lives in a separate tree (`logos-workshop`) and pinning a cross-repo flake input
 is brittle; add it to the installed manifest at deploy time (Basecamp bundles
-`logos_execution_zone`; install `logos_wallet` alongside).
+`logos_execution_zone`; install `persona_core` alongside).
 
 ## Where it lives
 
@@ -171,5 +171,5 @@ is brittle; add it to the installed manifest at deploy time (Basecamp bundles
 - Provider: `cli-provider/provider-core/src/provider_plugin.cpp` —
   `sessionEligible`, `seqBalance`, session persistence, earnings in `stats()`.
 - UI: `inference-ui/Main.qml` — the wallet balance bar + live session status.
-- Wallet: the `logos_wallet` module (separate `logos-workshop` tree) provides
+- Wallet: the `persona_core` module (the Persona wallet, github.com/hackyguru/persona) provides
   `lezTransfer` / `lezReceiveAddress` / balances.
